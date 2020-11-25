@@ -28,7 +28,7 @@ class PandasGeocoder:
                                GeoAPIWrapper(Nominatim, user_agent="nominatim_locator")]
 
         self.geocode_cache = {}
-        self.processed_items, self.found, self.not_found = 0, 0, 0
+        self.processed_items, self.found = 0, 0
 
     def save_cache(self):
         disc_cache = dc.Cache(API_CACHE)
@@ -43,8 +43,9 @@ class PandasGeocoder:
     def run(self, data: pd.DataFrame, address_columns: list) -> pd.DataFrame:
         self.data = data
         self.address_columns = address_columns
+
         self.progress_bar = IncrementalBar(name="geocoding progress", max=len(self.data.index))
-        self.processed_items, self.found, self.not_found = 0, 0, 0
+        self.processed_items, self.not_found = 0, 0
         self.running = True
 
         if len(self.geocode_cache) == 0:
@@ -75,8 +76,7 @@ class PandasGeocoder:
                 'in_progress': self.running,
                 'processed_items': self.processed_items,
                 'total_items': len(self.data.index),
-                'found_items': self.found,
-                'not_found_items': self.not_found
+                'api_found_items': self.found,
             }
 
     def get_coordinates_args(self, address_row) -> [float, float]:
@@ -92,7 +92,9 @@ class PandasGeocoder:
             for geo_coder_api in self.geo_coder_apis:
                 longitude, latitude = geo_coder_api.get_lon_lat(search_address, address_string)
                 if longitude is not None and latitude is not None:
+                    self.found += 1
                     break
             self.geocode_cache[search_address] = self.geocode_cache[address_string] = longitude, latitude
         self.progress_bar.next()
+        self.processed_items += 1
         return longitude, latitude

@@ -1,10 +1,13 @@
 geopy==2.0.0
+python-multipart
 fastapi==0.61.2
 pandas==1.1.4
 numba==0.50.0
-usaddress
+numpy==1.19.3
 diskcache
 street-address
 progress
 address-parser
 phonetics
+uvicorn
+aiofiles

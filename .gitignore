@@ -1,3 +1,5 @@
 .idea
 venv
 api_cache
+csv/*.csv
+creds.conf

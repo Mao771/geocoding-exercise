@@ -1,5 +1,4 @@
 import os
-import uuid
 import pandas as pd
 from definitions import CSV_DIRECTORY
 from data_geocoders import PandasGeocoder
@@ -25,6 +24,20 @@ class GeocodeTask:
             if self.results[task_id]['geocoder'].is_running():
                 return True
         return False
+
+    def stats(self):
+        if self.results:
+            for item_id in self.results:
+                try:
+                    return {
+                        'id': item_id,
+                        'geocoder_status': self.results[item_id].get('geocoder').get_status(),
+                        'filepath': self.results[item_id].get('file_path')
+                    }
+                except:
+                    pass
+        else:
+            return {}
 
     def task_status(self, task_id):
         if task_id in self.results:
