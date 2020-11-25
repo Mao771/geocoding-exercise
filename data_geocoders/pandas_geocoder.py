@@ -5,7 +5,6 @@ import configparser
 
 from progress.bar import IncrementalBar
 from streetaddress import StreetAddressParser
-from address_parser import Parser
 from concurrent.futures import ThreadPoolExecutor
 from geopy.geocoders import GoogleV3, Nominatim
 
@@ -15,22 +14,19 @@ from data_geocoders.api import GeoAPIWrapper
 
 class PandasGeocoder:
 
-    def __init__(self, data: pd.DataFrame, address_columns: list):
+    def __init__(self):
         config = configparser.ConfigParser()
         config.read(CREDENTIALS)
 
-        self.data = data
-        self.address_columns = address_columns
-        self.address_parser = Parser()
+        self.running = False
+        self.data = None
+        self.address_columns = []
         self.street_address_parser = StreetAddressParser()
-        self.progress_bar = IncrementalBar('PandasGeocoder', max=len(self.data.index))
+        self.progress_bar = None
         self.geo_coder_apis = [GeoAPIWrapper(GoogleV3, user_agent="google_locator",
-                                             api_key=config["Google"]["api_token"])]
+                                             api_key=config["Google"]["api_token"]),
+                               GeoAPIWrapper(Nominatim, user_agent="nominatim_locator")]
 
-        self.geocode_cache = {}
-        self.processed_items, self.found, self.not_found = 0, 0, 0
-
-    def reset(self):
         self.geocode_cache = {}
         self.processed_items, self.found, self.not_found = 0, 0, 0
 
@@ -44,7 +40,13 @@ class PandasGeocoder:
         for key in disc_cache.iterkeys():
             self.geocode_cache[key] = disc_cache[key]
 
-    def run(self) -> pd.DataFrame:
+    def run(self, data: pd.DataFrame, address_columns: list) -> pd.DataFrame:
+        self.data = data
+        self.address_columns = address_columns
+        self.progress_bar = IncrementalBar(name="geocoding progress", max=len(self.data.index))
+        self.processed_items, self.found, self.not_found = 0, 0, 0
+        self.running = True
+
         if len(self.geocode_cache) == 0:
             self.read_cache()
 
@@ -56,16 +58,26 @@ class PandasGeocoder:
         self.progress_bar.finish()
         if len(self.geocode_cache) > 0:
             self.save_cache()
+        self.running = False
 
         return self.data
 
+    def is_running(self):
+        return self.running
+
     def get_status(self):
-        return {
-            'processed_items': self.processed_items,
-            'total_items': len(self.data.index),
-            'found_items': self.found,
-            'not_found_items': self.not_found
-        }
+        if self.data is None:
+            return {
+                'in_progress': self.running
+            }
+        else:
+            return {
+                'in_progress': self.running,
+                'processed_items': self.processed_items,
+                'total_items': len(self.data.index),
+                'found_items': self.found,
+                'not_found_items': self.not_found
+            }
 
     def get_coordinates_args(self, address_row) -> [float, float]:
         arr = [str(addr_unit).strip().lower() for addr_unit in address_row if len(str(addr_unit)) > 0]

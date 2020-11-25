@@ -1,13 +1,13 @@
-import os
 import pandas as pd
-
-from definitions import SAMPLE_CSV_RESULT
+import uuid
+import os
+from definitions import CSV_DIRECTORY
 from data_geocoders import PandasGeocoder
 
 
 if __name__ == '__main__':
-    data = pd.read_csv('../NW6 Data.csv', delimiter=';')
+    data = pd.read_csv(os.path.join(CSV_DIRECTORY, 'filename.csv'), delimiter=';')
     columns = ['address_1', 'address_2', 'address_3', 'postcode']
-    pg = PandasGeocoder(data, columns)
-    result = pg.run()
-    result.to_csv(os.path.join(SAMPLE_CSV_RESULT))
+    pg = PandasGeocoder()
+    result = pg.run(data, columns)
+    result.to_csv(os.path.join(CSV_DIRECTORY, f"{uuid.uuid4()}.csv"))

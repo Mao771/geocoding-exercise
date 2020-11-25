@@ -11,8 +11,11 @@ class GeoAPIWrapper:
 
     def get_lon_lat(self, *queries):
         for query in queries:
-            rate_limited = RateLimiter(self.geo_locator.geocode, min_delay_seconds=2)
-            location = rate_limited(query=query)
-            if location:
-                return location.longitude, location.latitude
+            try:
+                rate_limited = RateLimiter(self.geo_locator.geocode, min_delay_seconds=2)
+                location = rate_limited(query=query)
+                if location:
+                    return location.longitude, location.latitude
+            except:
+                return None, None
         return None, None
