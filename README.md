@@ -1,15 +1,8 @@
-**Pre-cofig**
-
-To use app, you should create creds.conf file in the root directory with the [Google] section and api_token field.
-Use creds-example.conf as an example.
-
 **Tokens**
 
-To use GoogleV3 Geocoding, you should issue free access token: 
+To use GoogleV3 Geocoding, you can issue access token (which is not free for now): 
 https://developers.google.com/maps/documentation/geocoding/get-api-key, create file creds.conf in the root of the project and paste
 a token value into the api_token field. 
-
-You can paste any value into api_token field, but using GoogleV3 is highly recommended for stable app work.
 
 **Docker**
 
